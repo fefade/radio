@@ -5,6 +5,7 @@
 	import { Stations } from "$lib/components/stations/index.js"
 	import apiService from "$lib/services/apiService.js"
 	import type { CountryType, StationsType } from "$lib/types/index.js"
+	import { m } from "@/paraglide/messages.js"
 	import { Constants } from "@fefade-ui/core"
 	import {
 		Link,
@@ -30,10 +31,14 @@
 	let currentStationuuid = $state("")
 	let currentUrl = $state("")
 	let volume = $state(defaultVolume)
+
 	let audio: HTMLAudioElement | null = $state(null)
 	let isPlaying = $state(false)
+	let isBuffering = $state(false)
+
 	let currentSound: string | undefined = $state()
 	let eventSource: EventSource | null = $state(null)
+	let reconnectTimeout: ReturnType<typeof setTimeout>
 
 	const api = apiService()
 	const isSm = useMediaQuery("max-width", "sm")
@@ -47,6 +52,7 @@
 	function resetAudio() {
 		if (audio) {
 			audio.pause()
+			audio.src = ""
 			audio = null
 		}
 	}
@@ -59,17 +65,11 @@
 	}
 
 	function playAudio() {
-		if (audio) {
-			audio.play()
-			isPlaying = true
-		}
+		if (audio) audio.play().catch(console.error)
 	}
 
 	function pauseAudio() {
-		if (audio) {
-			audio.pause()
-			isPlaying = false
-		}
+		if (audio) audio.pause()
 	}
 
 	function setCurrentStationStorage() {
@@ -88,11 +88,28 @@
 		return localStorage.getItem(currentVolumeStorageKey)
 	}
 
+	function recoverConnection() {
+		clearTimeout(reconnectTimeout)
+		reconnectTimeout = setTimeout(() => {
+			if (audio && currentUrl) {
+				const separator = currentUrl.includes("?") ? "&" : "?"
+				audio.src = `${currentUrl}${separator}cb=${Date.now()}`
+				audio.load()
+				playAudio()
+			}
+		}, 3000)
+	}
+
+	function handleNetworkOnline() {
+		if (audio && (audio.error || audio.readyState === 0)) {
+			recoverConnection()
+		}
+	}
+
 	function playSound() {
 		if (!currentStation) return
 
 		const { url_resolved, name, stationuuid } = currentStation
-
 		const isSameStation = url_resolved === currentUrl
 
 		function setAudioAndPlay() {
@@ -103,6 +120,29 @@
 			currentUrl = url_resolved
 			currentSound = name
 			currentStationuuid = stationuuid
+
+			audio.onplaying = () => {
+				isPlaying = true
+				isBuffering = false
+				if ("mediaSession" in navigator)
+					navigator.mediaSession.playbackState = "playing"
+			}
+
+			audio.onpause = () => {
+				isPlaying = false
+				if ("mediaSession" in navigator)
+					navigator.mediaSession.playbackState = "paused"
+			}
+
+			audio.onwaiting = () => {
+				isBuffering = true
+			}
+
+			audio.onerror = () => {
+				isBuffering = true
+
+				if (navigator.onLine) recoverConnection()
+			}
 
 			playAudio()
 			setCurrentStationStorage()
@@ -158,6 +198,16 @@
 	})
 
 	$effect(() => {
+		if ("mediaSession" in navigator && currentStation) {
+			navigator.mediaSession.metadata = new MediaMetadata({
+				title: currentSound || currentStation.name,
+				artist: currentSound ? currentStation.name : m["metadata.title"](),
+				artwork: [{ src: currentStation?.favicon }]
+			})
+		}
+	})
+
+	$effect(() => {
 		if (eventSource) {
 			eventSource.onmessage = (e) => {
 				if (e.data === "Unknown") {
@@ -178,26 +228,21 @@
 		currentStationuuid = String(getCurrentStationFromStorage())
 		volume = Number(getCurrentVolumeFromStorage() || defaultVolume)
 
-		navigator.mediaSession.setActionHandler("play", () => {
-			if (audio) {
-				audio.play()
-			}
-		})
+		window.addEventListener("online", handleNetworkOnline)
 
-		navigator.mediaSession.setActionHandler("pause", () => {
-			if (audio) {
-				audio.pause()
-			}
-		})
+		if ("mediaSession" in navigator) {
+			navigator.mediaSession.setActionHandler("play", playAudio)
+			navigator.mediaSession.setActionHandler("pause", pauseAudio)
+			navigator.mediaSession.setActionHandler("stop", resetAudio)
+		}
 
-		navigator.mediaSession.setActionHandler("stop", () => {
-			if (audio) {
-				audio.pause()
-			}
-		})
+		return () => {
+			window.removeEventListener("online", handleNetworkOnline)
+		}
 	})
 
 	onDestroy(() => {
+		clearTimeout(reconnectTimeout)
 		resetAudio()
 		resetEventSource()
 	})

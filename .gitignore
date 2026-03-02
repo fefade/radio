@@ -86,3 +86,6 @@ android/app/src/main/res/mipmap-*/
 android/app/src/main/res/drawable-*/
 android/store_icon.png
 android/app/build.gradle
+# Paraglide
+src/lib/paraglide
+project.inlang/cache/

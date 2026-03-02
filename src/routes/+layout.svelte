@@ -1,18 +1,24 @@
 <script lang="ts">
+	import { locales, localizeHref } from "$lib/paraglide/runtime"
 	import { Provider } from "@fefade-ui/svelte"
 	import favicon from "$lib/assets/images/favicon.ico"
+	import { page } from "$app/state"
 
 	let { children } = $props()
 </script>
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
-	<link rel="canonical" href="https://radio.fefade.com" />
+	<link rel="canonical" href={page.url.href} />
 </svelte:head>
 
-<Provider defaultThemeMode="dark">
-	{@render children?.()}
-</Provider>
+<Provider defaultThemeMode="dark">{@render children?.()}</Provider>
+
+<div style="display:none">
+	{#each locales as locale}
+		<a href={localizeHref(page.url.pathname, { locale })}>{locale}</a>
+	{/each}
+</div>
 
 <style>
 	@font-face {
