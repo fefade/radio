@@ -249,7 +249,7 @@
 </script>
 
 <svelte:head>
-	<title>{currentSound || `${m["metadata.title"]()} | ${data.title}`}</title>
+	<title>{currentSound ?? `${m["metadata.title"]()} | ${data.title}`}</title>
 	<meta name="description" content={m["metadata.description"]()} />
 </svelte:head>
 

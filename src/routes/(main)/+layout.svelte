@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Link } from "@fefade-ui/svelte"
-
 	let { children } = $props()
 </script>
 
@@ -8,14 +6,6 @@
 	<main class="content">
 		{@render children()}
 	</main>
-
-	<footer class="footer muted">
-		<div style="display: flex; align-items: baseline; gap: 0.5rem;">
-			<span>&copy; 2025</span>
-			<Link href="https://fefade.com" target="_blank" hover="right">fefade</Link
-			>
-		</div>
-	</footer>
 </div>
 
 <style>
@@ -38,15 +28,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-	}
-
-	.footer {
-		grid-area: footer;
-		padding: 5rem 1rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2rem;
 	}
 
 	@media screen and (max-width: 768px) {
