@@ -249,11 +249,8 @@
 </script>
 
 <svelte:head>
-	<title>{currentSound ?? "Listen Live on Radio"} | {data.title}</title>
-	<meta
-		name="description"
-		content="Discover live streams, top hits, and your favorite stations anytime, anywhere."
-	/>
+	<title>{currentSound || `${m["metadata.title"]()} | ${data.title}`}</title>
+	<meta name="description" content={m["metadata.description"]()} />
 </svelte:head>
 
 <ControlBar
