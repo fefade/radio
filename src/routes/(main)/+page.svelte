@@ -284,7 +284,7 @@
 		}}
 	>
 		<img alt="logo" src="/512x512.png" height="48px" width="48px" />
-		<h2>Radio</h2>
+		<h2>{m["metadata.title"]()}</h2>
 	</Link>
 	<div style="flex: 1;"></div>
 	<form onsubmit={handleSubmit} style="width: {isSm.value ? '100%' : 'auto'};">

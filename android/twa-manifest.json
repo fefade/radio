@@ -1,7 +1,7 @@
 {
   "packageId": "com.fefade.radio",
   "host": "radio.fefade.com",
-  "name": "Listen Live on Radio",
+  "name": "fefade radio",
   "launcherName": "Radio",
   "display": "standalone",
   "themeColor": "#171717",
@@ -24,7 +24,7 @@
   "appVersionCode": 2,
   "shortcuts": [
     {
-      "name": "Listen Live on Radio",
+      "name": "fefade radio",
       "shortName": "Radio",
       "url": "https://radio.fefade.com/",
       "chosenIconUrl": "https://radio.fefade.com/192x192.png"
